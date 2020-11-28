@@ -183,7 +183,7 @@ class _ProductScreenState extends State<ProductScreen> {
             _createFormRow(
               controller: _titleController,
               title: 'Имя',
-              hintText: 'Product title',
+              hintText: 'Название',
             ),
             SizedBox(height: 12.0),
             _createFormRow(

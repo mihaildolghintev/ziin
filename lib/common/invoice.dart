@@ -109,14 +109,22 @@ void createPdf(WriteOff writeoff) async {
                               ),
                               child: pw.Column(
                                 children: [
-                                  ...item.product.barcodes
-                                      .map((barcode) => pw.Text(
-                                            barcode,
-                                            style: pw.TextStyle(
-                                              fontSize: 12.0,
-                                            ),
-                                          ))
-                                      .toList()
+                                  if (item.product.isWeight)
+                                    pw.Text(
+                                      'PLU: ${item.product.plu}',
+                                      style: pw.TextStyle(
+                                        fontSize: 12.0,
+                                      ),
+                                    ),
+                                  if (!item.product.isWeight)
+                                    ...item.product.barcodes
+                                        .map((barcode) => pw.Text(
+                                              barcode,
+                                              style: pw.TextStyle(
+                                                fontSize: 12.0,
+                                              ),
+                                            ))
+                                        .toList()
                                 ],
                               )),
                           pw.Expanded(

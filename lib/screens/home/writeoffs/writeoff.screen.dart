@@ -119,11 +119,16 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
     });
   }
 
-  void _createPdf(WriteOff writeoff) async {
+  void _createPdf(WriteOff writeOff) async {
     final writeoffProvider =
         Provider.of<WriteOffsProvider>(context, listen: false);
     try {
-      await writeoffProvider.createWriteOff(writeoff);
+      if (widget.writeOff != null) {
+        await writeoffProvider.updateWriteOff(writeOff);
+      } else {
+        await writeoffProvider.createWriteOff(writeOff);
+      }
+      createPdf(writeOff);
     } on FirebaseException catch (e) {
       showDialog(
           context: context,
@@ -131,7 +136,6 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                 error: e,
               ));
     }
-    createPdf(writeoff);
   }
 
   @override

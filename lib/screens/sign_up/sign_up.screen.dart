@@ -103,7 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ZTextField(
                           controller: _passwordController,
                           icon: Icons.lock_outline,
-                          hintText: 'password',
+                          hintText: 'Пароль',
                           obscure: true,
                         ),
                         SizedBox(
