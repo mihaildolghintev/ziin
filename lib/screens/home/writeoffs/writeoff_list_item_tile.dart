@@ -43,9 +43,6 @@ class _WriteOffListItemTileState extends State<WriteOffListItemTile> {
             fontWeight: FontWeight.w900,
           ),
         ),
-        subtitle: Text(
-          widget.writeoffItem.product.barcode,
-        ),
         trailing: Text(
           _createQuantityString(widget.writeoffItem),
           style: TextStyle(

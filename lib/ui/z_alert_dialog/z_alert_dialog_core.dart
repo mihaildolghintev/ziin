@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ziin/common/colors.dart';
 
 class ZAlertDialogCore extends StatelessWidget {
-  ZAlertDialogCore({@required this.actions, @required this.title});
-  final List<Widget> actions;
+  ZAlertDialogCore({@required this.content, @required this.title});
+  final List<Widget> content;
   final String title;
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ZAlertDialogCore extends StatelessWidget {
         ),
       ),
       title: Text(
-        'Error',
+        title,
         style: TextStyle(
           fontWeight: FontWeight.bold,
         ),
@@ -30,7 +30,7 @@ class ZAlertDialogCore extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: actions,
+        children: content,
       ),
     );
   }

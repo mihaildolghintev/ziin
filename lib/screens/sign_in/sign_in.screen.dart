@@ -32,6 +32,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
       await auth.signIn(email, password);
       Navigator.of(context).pop();
+      Navigator.of(context).pushReplacementNamed('/home');
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
       showDialog(
@@ -66,7 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Column(
                       children: [
                         ZHeader(
-                          value: 'Login',
+                          value: 'Авторизация',
                         ),
                         SizedBox(
                           height: 24.0,
@@ -96,32 +97,17 @@ class _SignInScreenState extends State<SignInScreen> {
                             email: _email,
                             password: _password,
                           ),
-                          value: 'ENTER',
+                          value: 'Войти',
                         ),
                         SizedBox(
                           height: 24.0,
                         ),
-                        Row(
-                          children: [
-                            Text(
-                              'Dont have an account?',
-                              style: TextStyle(
-                                fontSize: 13.0,
-                              ),
-                            ),
-                            FlatButton(
-                              onPressed: () {},
-                              child: Text(
-                                'Go here',
-                                style: TextStyle(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: ZColors.red,
-                                ),
-                              ),
-                            )
-                          ],
-                        )
+                        ZButton(
+                          onPressed: () =>
+                              Navigator.of(context).pushNamed('/signup'),
+                          value: 'Регистрация',
+                          isDark: true,
+                        ),
                       ],
                     ),
                   ),

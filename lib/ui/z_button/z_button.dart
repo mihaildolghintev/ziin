@@ -33,7 +33,11 @@ class ZButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            if (icon != null) Icon(icon),
+            if (icon != null)
+              Icon(
+                icon,
+                color: isDark ? Colors.white : Colors.black,
+              ),
             Text(
               value,
               style: TextStyle(

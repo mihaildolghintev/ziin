@@ -5,8 +5,8 @@ class ZInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ZAlertDialogCore(
-      title: null,
-      actions: [
+      title: '',
+      content: [
         Column(
           children: [
             Text('Entering...'),

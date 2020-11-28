@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ziin/common/errors.dart';
@@ -8,12 +6,12 @@ import 'package:ziin/ui/z_button/z_button.dart';
 
 class ZErrorDialog extends StatelessWidget {
   ZErrorDialog({@required this.error});
-  final FirebaseAuthException error;
+  final FirebaseException error;
   @override
   Widget build(BuildContext context) {
     return ZAlertDialogCore(
       title: 'ОШИБКА',
-      actions: [
+      content: [
         Column(
           children: [
             Text(showError(error)),

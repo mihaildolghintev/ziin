@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ziin/logic/writeoffProductItems.cubit.dart';
 import 'package:ziin/models/product_item.model.dart';
 import 'package:ziin/models/writeoff_item.model.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
 import 'package:ziin/ui/z_textfield/z_textfield.dart';
 
-class SelectWriteOffItemQuantity extends StatefulWidget {
-  SelectWriteOffItemQuantity({@required this.item, this.edit = false});
+class SelectWriteOffItemQuantityProps {
+  SelectWriteOffItemQuantityProps({
+    this.item,
+    this.edit = false,
+    this.onAddProductItem,
+    this.onUpdateProductItem,
+    this.onRemoveProductItem,
+  });
   final WriteOffItem item;
   final bool edit;
+  void Function(WriteOffItem) onAddProductItem;
+  void Function(WriteOffItem) onUpdateProductItem;
+  void Function(WriteOffItem) onRemoveProductItem;
+}
+
+class SelectWriteOffItemQuantity extends StatefulWidget {
+  SelectWriteOffItemQuantity({@required this.props});
+  final SelectWriteOffItemQuantityProps props;
   @override
   _SelectWriteOffItemQuantityState createState() =>
       _SelectWriteOffItemQuantityState();
@@ -22,7 +34,11 @@ class _SelectWriteOffItemQuantityState
   @override
   void initState() {
     _quanitityController = TextEditingController(
-        text: widget.edit ? widget.item.quanity.toString() : '1');
+        text: widget.props.edit ? widget.props.item.quanity.toString() : '1');
+
+    if (widget.props.item.product.isWeight && widget.props.item == null) {
+      _quanitityController.text = '0';
+    }
     super.initState();
   }
 
@@ -51,30 +67,27 @@ class _SelectWriteOffItemQuantityState
   }
 
   void _submit() {
-    final writeoffProvider =
-        BlocProvider.of<WriteOffProductItemsCubit>(context);
     final quantity = double.tryParse(_quanitityController.text);
-    if (widget.edit) {
-      writeoffProvider.updateItemInProductList(
+    if (widget.props.edit) {
+      widget.props.onUpdateProductItem(
         WriteOffItem(
-          product: widget.item.product,
+          product: widget.props.item.product,
           quanity: quantity,
         ),
       );
     } else {
-      writeoffProvider.addItemToProductList(
+      widget.props.onAddProductItem(
         WriteOffItem(
-          product: widget.item.product,
+          product: widget.props.item.product,
           quanity: quantity,
         ),
       );
     }
-    Navigator.of(context)
-        .pushNamedAndRemoveUntil('/writeoff', ModalRoute.withName('/'));
+    Navigator.of(context).pop();
   }
 
-  bool get isWeight => widget.item.product.isWeight;
-  ProductItem get product => widget.item.product;
+  bool get isWeight => widget.props.item.product.isWeight;
+  ProductItem get product => widget.props.item.product;
 
   @override
   Widget build(BuildContext context) {
@@ -82,64 +95,56 @@ class _SelectWriteOffItemQuantityState
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0.0,
+        iconTheme: IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         title: Center(
           child: Text('Колличество'),
         ),
       ),
-      body: BlocProvider(
-        create: (context) => WriteOffProductItemsCubit(),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Text(
-                product.title,
-                style: TextStyle(
-                  fontSize: 40.0,
-                  fontWeight: FontWeight.w500,
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              product.title,
+              style: TextStyle(
+                fontSize: 40.0,
+                fontWeight: FontWeight.w500,
               ),
-              Text(
-                product.barcode,
-                style: TextStyle(
-                  fontSize: 24.0,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      isWeight ? 'Вес' : 'Колличество',
-                      style: TextStyle(
-                        fontSize: 40.0,
-                        fontWeight: FontWeight.w500,
-                      ),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isWeight ? 'Вес (КГ)' : 'Колличество',
+                    style: TextStyle(
+                      fontSize: 40.0,
+                      fontWeight: FontWeight.w500,
                     ),
-                    SizedBox(height: 24.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ZButton(onPressed: _sub, value: '-'),
-                        Container(
-                          width: 128.0,
-                          child: ZTextField(
-                            controller: _quanitityController,
-                            keyboardType: TextInputType.number,
-                          ),
+                  ),
+                  SizedBox(height: 24.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ZButton(onPressed: _sub, value: '-'),
+                      Container(
+                        width: 128.0,
+                        child: ZTextField(
+                          controller: _quanitityController,
+                          keyboardType: TextInputType.number,
                         ),
-                        ZButton(onPressed: _add, value: '+'),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      ZButton(onPressed: _add, value: '+'),
+                    ],
+                  ),
+                ],
               ),
-              ZButton(
-                  onPressed: _submit,
-                  value: widget.edit ? 'Обновить' : 'Добавить'),
-            ],
-          ),
+            ),
+            ZButton(
+                onPressed: _submit,
+                value: widget.props.edit ? 'Обновить' : 'Добавить'),
+          ],
         ),
       ),
     );

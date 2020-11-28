@@ -1,22 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
-abstract class AuthBase {
-  User get currentUser;
-  Stream<User> get userStream;
-  Future<User> signIn(String email, String password);
-  Future<void> logOut();
-}
-
-class Auth implements AuthBase {
+class Auth {
   final _auth = FirebaseAuth.instance;
 
-  @override
   User get currentUser => _auth.currentUser;
+  String get currentUserDisplayName => currentUser.displayName;
 
-  @override
   Stream<User> get userStream => _auth.authStateChanges();
 
-  @override
   Future<User> signIn(String email, String password) async {
     _auth.setLanguageCode('ru');
     final userCredentials = await _auth.signInWithEmailAndPassword(
@@ -24,8 +16,18 @@ class Auth implements AuthBase {
     return userCredentials.user;
   }
 
-  @override
   Future<void> logOut() async {
     return await _auth.signOut();
+  }
+
+  Future<User> createUser({
+    @required String email,
+    @required String password,
+    @required displayName,
+  }) async {
+    final UserCredential userCredential = await _auth
+        .createUserWithEmailAndPassword(email: email, password: password);
+    userCredential.user.updateProfile(displayName: displayName);
+    return userCredential.user;
   }
 }

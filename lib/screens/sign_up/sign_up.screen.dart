@@ -17,12 +17,13 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _dispalyNameController = TextEditingController();
 
   get _email => _emailController.text;
   get _password => _passwordController.text;
+  get _displayName => _dispalyNameController.text;
 
-  Future<void> _submit(BuildContext context,
-      {String email, String password}) async {
+  Future<void> _submit(BuildContext context) async {
     final auth = Provider.of<Auth>(context, listen: false);
     try {
       showDialog(
@@ -30,8 +31,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         barrierDismissible: false,
         builder: (_) => ZInfoDialog(),
       );
-      await auth.signIn(email, password);
+      await auth.createUser(
+          email: _email, password: _password, displayName: _displayName);
       Navigator.of(context).pop();
+      Navigator.of(context).pushReplacementNamed('/home');
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
       showDialog(
@@ -49,11 +52,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
         color: ZColors.yellow,
         child: SingleChildScrollView(
           child: SizedBox(
-            height: MediaQuery.of(context).size.height - 16.0,
+            height: MediaQuery.of(context).size.height,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Image.asset('images/signin.png'),
+                Container(
+                  height: 200.0,
+                  child: Image.asset(
+                    'images/signup.png',
+                    fit: BoxFit.fill,
+                  ),
+                ),
                 Container(
                   decoration: BoxDecoration(
                       color: Colors.white,
@@ -66,7 +75,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       children: [
                         ZHeader(
-                          value: 'Login',
+                          value: 'Регистрация',
+                        ),
+                        SizedBox(
+                          height: 24.0,
+                        ),
+                        ZTextField(
+                          controller: _dispalyNameController,
+                          icon: Icons.hearing,
+                          hintText: 'Имя',
+                          keyboardType: TextInputType.text,
+                          textInputAction: TextInputAction.next,
                         ),
                         SizedBox(
                           height: 24.0,
@@ -93,10 +112,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ZButton(
                           onPressed: () => _submit(
                             context,
-                            email: _email,
-                            password: _password,
                           ),
-                          value: 'ENTER',
+                          value: 'Создать',
+                        ),
+                        SizedBox(
+                          height: 24.0,
+                        ),
+                        ZButton(
+                          onPressed: () =>
+                              Navigator.of(context).pushNamed('/signin'),
+                          value: 'Авторизация',
+                          isDark: true,
                         ),
                       ],
                     ),

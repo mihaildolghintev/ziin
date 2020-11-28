@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:ziin/common/colors.dart';
 import 'package:ziin/logic/product.dart';
 import 'package:ziin/models/product_item.model.dart';
+import 'package:ziin/screens/home/products/add_barcode.screen.dart';
+import 'package:ziin/screens/home/products/product_barcode_tile.dart';
 import 'package:ziin/ui/z_alert_dialog/z_alert_dialog.dart';
 import 'package:ziin/ui/z_alert_dialog/z_confirm_dialog.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
@@ -19,39 +21,78 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   TextEditingController _titleController;
-  TextEditingController _barcodeController;
   TextEditingController _pluController;
   TextEditingController _cashController;
   TextEditingController _weightController;
   bool _isWeight;
 
+  List<String> _barcodes = [];
+
+  void _removeBarcode(String barcode) {
+    setState(() {
+      _barcodes.removeWhere((b) => b == barcode);
+    });
+  }
+
+  void _onAddBarcode() async {
+    final code = await Navigator.of(context).pushNamed(
+      '/add-barcode',
+      arguments: AddBarcodeScreenProps(
+          productTitle: widget.productItem != null
+              ? widget.productItem.title
+              : _titleController.text),
+    );
+    if (code != null) {
+      setState(() {
+        if (!_barcodes.contains(code)) {
+          _barcodes.add(code);
+        }
+      });
+    }
+  }
+
+  void _onUpdateBarcode(String barcode) async {
+    final code = await Navigator.of(context).pushNamed(
+      '/add-barcode',
+      arguments: AddBarcodeScreenProps(
+        barcode: barcode,
+        productTitle: widget.productItem.title,
+      ),
+    );
+
+    if (code != null) {
+      final index = _barcodes.indexWhere((b) => b == barcode);
+      setState(() {
+        _barcodes[index] = code;
+      });
+    }
+  }
+
   @override
   void initState() {
     _titleController = TextEditingController(
         text: widget.productItem != null ? widget.productItem.title : '');
-    _barcodeController = TextEditingController(
-        text: widget.productItem != null ? widget.productItem.barcode : '');
     _pluController = TextEditingController(
         text: widget.productItem != null
             ? widget.productItem.plu.toString()
-            : 0.toString());
+            : '0');
     _cashController = TextEditingController(
         text: widget.productItem != null
             ? widget.productItem.cash.toString()
-            : 0.toString());
+            : '0');
     _weightController = TextEditingController(
         text: widget.productItem != null
             ? widget.productItem.weight.toString()
-            : 0.toString());
+            : '0');
     _isWeight =
         widget.productItem != null ? widget.productItem.isWeight : false;
+    _barcodes = widget.productItem != null ? widget.productItem.barcodes : [];
     super.initState();
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _barcodeController.dispose();
     _pluController.dispose();
     _cashController.dispose();
     _weightController.dispose();
@@ -62,7 +103,7 @@ class _ProductScreenState extends State<ProductScreen> {
     final productToCreate = ProductItem(
       id: widget?.productItem?.id,
       title: _titleController.text,
-      barcode: _barcodeController.text,
+      barcodes: _barcodes,
       plu: int.tryParse(_pluController.text),
       cash: int.tryParse(_cashController.text),
       weight: double.tryParse(_weightController.text),
@@ -146,27 +187,17 @@ class _ProductScreenState extends State<ProductScreen> {
             ),
             SizedBox(height: 12.0),
             _createFormRow(
-              controller: _barcodeController,
-              title: '#',
-              hintText: 'Barcode',
-            ),
-            SizedBox(height: 12.0),
-            _createFormRow(
               controller: _pluController,
+              keyboardType: TextInputType.phone,
               title: 'PLU',
               hintText: 'PLU',
             ),
             SizedBox(height: 12.0),
             _createFormRow(
               controller: _cashController,
+              keyboardType: TextInputType.phone,
               title: 'CASH',
               hintText: 'CASH',
-            ),
-            SizedBox(height: 12.0),
-            _createFormRow(
-              controller: _weightController,
-              title: 'Вес',
-              hintText: 'Weight',
             ),
             SizedBox(height: 12.0),
             CheckboxListTile(
@@ -185,12 +216,48 @@ class _ProductScreenState extends State<ProductScreen> {
                 });
               },
             ),
+            SizedBox(height: 12.0),
+            if (!_isWeight)
+              _createFormRow(
+                controller: _weightController,
+                keyboardType: TextInputType.phone,
+                title: 'Вес',
+                hintText: 'Weight',
+              ),
+            SizedBox(height: 12.0),
+            ..._barcodes
+                .map((barcode) => Dismissible(
+                      key: UniqueKey(),
+                      confirmDismiss: (_) async {
+                        return await showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) => ZConfirmDialog(
+                            onOK: () {
+                              _removeBarcode(barcode);
+                              Navigator.of(context).pop();
+                            },
+                            title: 'Подтвердите',
+                          ),
+                        );
+                      },
+                      child: ProductBarCodeTile(
+                        barcode: barcode,
+                        onTap: () => _onUpdateBarcode(barcode),
+                      ),
+                    ))
+                .toList(),
+            SizedBox(height: 12.0),
+            ZButton(
+              onPressed: _onAddBarcode,
+              value: 'Добавить штрихкод',
+            ),
             SizedBox(height: 48.0),
             ZButton(
               onPressed: () => _submit(context),
               value: widget.productItem != null ? 'Обновить' : 'Создать',
               isDark: true,
-            )
+            ),
           ],
         ),
       ),

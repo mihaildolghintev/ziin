@@ -10,10 +10,14 @@ class ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 0.0,
       child: ListTile(
         onTap: onTap,
-        title: Text(product.title),
+        title: Text(
+          product.isWeight
+              ? product.title
+              : '${product.title} (${product.weight} гр)',
+        ),
         leading: _createTileImage(product.title),
         subtitle: Row(
           children: [
@@ -31,7 +35,7 @@ class ProductTile extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          product.weight.toString() + 'гр',
+          product.isWeight ? 'кг' : 'шт',
           style: TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.w900,
