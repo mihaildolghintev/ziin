@@ -3,8 +3,9 @@ import 'package:ziin/ui/z_alert_dialog/z_alert_dialog_core.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
 
 class ZConfirmDialog extends StatelessWidget {
-  ZConfirmDialog({this.title, this.onOK});
+  ZConfirmDialog({@required this.title, @required this.onOK, this.content});
   final String title;
+  final String content;
   final VoidCallback onOK;
   @override
   Widget build(BuildContext context) {
@@ -13,7 +14,7 @@ class ZConfirmDialog extends StatelessWidget {
       content: [
         Column(
           children: [
-            Text('Подтвердите действие'),
+            Text(content != null ? content : 'Подтвердите действие'),
             SizedBox(height: 12.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

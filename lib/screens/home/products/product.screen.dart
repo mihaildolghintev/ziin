@@ -8,6 +8,7 @@ import 'package:ziin/screens/home/products/add_barcode.screen.dart';
 import 'package:ziin/screens/home/products/product_barcode_tile.dart';
 import 'package:ziin/ui/z_alert_dialog/z_alert_dialog.dart';
 import 'package:ziin/ui/z_alert_dialog/z_confirm_dialog.dart';
+import 'package:ziin/ui/z_alert_dialog/z_info_dialog.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
 import 'package:ziin/ui/z_textfield/z_textfield.dart';
 
@@ -126,7 +127,12 @@ class _ProductScreenState extends State<ProductScreen> {
     final productProvider = context.read(_productProvider);
 
     try {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => ZInfoDialog());
       await productProvider.updateProduct(productToSend);
+      Navigator.of(context).pop();
       Navigator.of(context).pop();
       Navigator.of(context).pop();
     } on FirebaseException catch (e) {
@@ -144,7 +150,12 @@ class _ProductScreenState extends State<ProductScreen> {
     final productProvider = context.read(_productProvider);
 
     try {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => ZInfoDialog());
       await productProvider.createProduct(productToSend);
+      Navigator.of(context).pop();
       Navigator.of(context).pop();
       Navigator.of(context).pop();
     } on FirebaseException catch (e) {

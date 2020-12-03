@@ -8,10 +8,8 @@ class ZInfoDialog extends StatelessWidget {
       title: '',
       content: [
         Column(
-          children: [
-            Text('Entering...'),
-            Text('Just a sec...'),
-          ],
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [CircularProgressIndicator()],
         )
       ],
     );

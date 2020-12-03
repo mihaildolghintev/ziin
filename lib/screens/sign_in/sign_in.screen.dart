@@ -34,7 +34,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
       await auth.signIn(email, password);
       Navigator.of(context).pop();
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed('/');
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
       showDialog(

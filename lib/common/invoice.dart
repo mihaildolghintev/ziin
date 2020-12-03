@@ -116,6 +116,12 @@ void createPdf(WriteOff writeoff) async {
                                         fontSize: 12.0,
                                       ),
                                     ),
+                                  if (item.product.cash != 0 &&
+                                      !item.product.isWeight)
+                                    pw.Text('CASH: ${item.product.cash}',
+                                        style: pw.TextStyle(
+                                          fontSize: 12.0,
+                                        )),
                                   if (!item.product.isWeight)
                                     ...item.product.barcodes
                                         .map((barcode) => pw.Text(
@@ -129,7 +135,7 @@ void createPdf(WriteOff writeoff) async {
                               )),
                           pw.Expanded(
                               child: pw.Text(
-                            '${item.product.title} PLU: ${item.product.plu} CASH: ${item.product.cash}',
+                            '${item.product.title}',
                             style: pw.TextStyle(
                               fontSize: 12.0,
                             ),
@@ -140,7 +146,8 @@ void createPdf(WriteOff writeoff) async {
                               vertical: 4.0,
                             ),
                             child: pw.Text(
-                              item.quanity.toString(),
+                              item.quanity.toString() +
+                                  (item.product.isWeight ? 'кг' : 'шт'),
                               style: pw.TextStyle(
                                 fontSize: 14.0,
                                 fontWeight: pw.FontWeight.bold,

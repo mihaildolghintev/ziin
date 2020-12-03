@@ -14,9 +14,7 @@ class ProductTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         title: Text(
-          product.isWeight
-              ? product.title
-              : '${product.title} (${product.weight} гр)',
+          product.isWeight ? product.title : '${product.title}',
         ),
         leading: _createTileImage(product.title),
         subtitle: Row(
@@ -32,6 +30,14 @@ class ProductTile extends StatelessWidget {
               'CASH:' + product.cash.toString(),
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
+            SizedBox(
+              width: 4.0,
+            ),
+            if (product.weight != 0)
+              Text(
+                '(${product.weight} гр)',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
           ],
         ),
         trailing: Text(

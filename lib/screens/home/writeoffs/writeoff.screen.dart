@@ -5,9 +5,9 @@ import 'package:ziin/common/colors.dart';
 import 'package:ziin/common/date_string.dart';
 import 'package:ziin/common/invoice.dart';
 import 'package:ziin/logic/auth.dart';
+import 'package:ziin/logic/writeoff_products.dart';
 import 'package:ziin/logic/writeoffs.dart';
 import 'package:ziin/models/write_off.model.dart';
-import 'package:ziin/models/writeoff_item.model.dart';
 import 'package:ziin/screens/home/products/products.page.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff_item_quantity.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff_list_item_tile.dart';
@@ -24,18 +24,20 @@ class WriteOffScreen extends StatefulWidget {
 
 class _WriteOffScreenState extends State<WriteOffScreen> {
   DateTime _datetime = DateTime.now();
-  List<WriteOffItem> productItems = [];
 
   final _writeOffsProvider = Provider((ref) => WriteOffsProvider());
   final _authProvider = Provider((ref) => Auth());
+  final _writeOffProductItemsProvider = writeoffProductItemsProvider;
 
   @override
   void initState() {
+    final writeoffProductItemsProvider =
+        context.read(_writeOffProductItemsProvider);
     super.initState();
     if (widget.writeOff != null) {
       _datetime =
           widget.writeOff != null ? widget.writeOff.createdAt : DateTime.now();
-      productItems = widget.writeOff.items;
+      writeoffProductItemsProvider.setProducts(widget.writeOff.items);
     }
   }
 
@@ -77,50 +79,6 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
     }
   }
 
-  void addItemToProductList(WriteOffItem item) {
-    final index =
-        productItems.indexWhere((i) => i.product.id == item.product.id);
-    if (index == -1) {
-      setState(() {
-        productItems = [...productItems, item];
-      });
-    } else {
-      final copyItem = WriteOffItem(
-        product: item.product,
-        quanity: productItems[index].quanity + item.quanity,
-      );
-      setState(() {
-        productItems = [
-          ...productItems.sublist(0, index),
-          copyItem,
-          ...productItems.sublist(index + 1),
-        ];
-      });
-    }
-  }
-
-  void updateItemInProductList(WriteOffItem item) {
-    final index = productItems.indexWhere(
-      (itemInList) => item.product.id == itemInList.product.id,
-    );
-
-    setState(() {
-      productItems = [
-        ...productItems.sublist(0, index),
-        item,
-        ...productItems.sublist(index + 1),
-      ];
-    });
-  }
-
-  void removeItemFromProductList(WriteOffItem item) {
-    setState(() {
-      productItems = productItems
-          .where((itemInList) => item.product.id != itemInList.product.id)
-          .toList();
-    });
-  }
-
   void _createPdf(WriteOff writeOff) async {
     final writeoffsProvider = context.read(_writeOffsProvider);
     try {
@@ -139,14 +97,38 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
     }
   }
 
+  void _onArrowBack() async {
+    final products = context.read(_writeOffProductItemsProvider.state);
+    if (products.isNotEmpty) {
+      await showDialog(
+          context: context,
+          builder: (_) => ZConfirmDialog(
+                onOK: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                content: 'Документ не будет сохранен',
+                title: 'Подвертдите действие',
+              ));
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, watch, child) {
         final auth = watch(_authProvider);
+        final productItemsProvider = watch(_writeOffProductItemsProvider);
+        final products = watch(_writeOffProductItemsProvider.state);
         return Scaffold(
             backgroundColor: ZColors.yellow,
             appBar: AppBar(
+              leading: IconButton(
+                onPressed: _onArrowBack,
+                icon: Icon(Icons.arrow_back_rounded),
+              ),
               iconTheme: IconThemeData(color: Colors.black),
               backgroundColor: ZColors.yellow,
               elevation: 0.0,
@@ -189,9 +171,12 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                         onPressed: () => Navigator.of(context).pushNamed(
                             '/select-product-item',
                             arguments: ProductsPageProps(
-                              onAddProductItem: addItemToProductList,
-                              onUpdateProductItem: updateItemInProductList,
-                              onRemoveProductItem: removeItemFromProductList,
+                              onAddProductItem:
+                                  productItemsProvider.addItemToProductList,
+                              onUpdateProductItem:
+                                  productItemsProvider.updateItemInProductList,
+                              onRemoveProductItem: productItemsProvider
+                                  .removeItemFromProductList,
                             )),
                         value: '+',
                       )
@@ -210,7 +195,7 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                           ),
                         ),
                         Text(
-                          productItems.length.toString(),
+                          products.length.toString(),
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 22.0),
                         ),
@@ -219,23 +204,19 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                   ),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: productItems.length,
+                      itemCount: products.length,
                       itemBuilder: (BuildContext context, int index) {
                         return Dismissible(
                           key: UniqueKey(),
-                          onDismissed: (_) =>
-                              removeItemFromProductList(productItems[index]),
+                          onDismissed: (_) => productItemsProvider
+                              .removeItemFromProductList(products[index]),
                           child: WriteOffListItemTile(
-                            writeoffItem: productItems[index],
+                            writeoffItem: products[index],
                             onTap: () => Navigator.of(context).pushNamed(
                               '/edit-quantity-item',
                               arguments: SelectWriteOffItemQuantityProps(
-                                item: productItems[index],
+                                item: products[index],
                                 edit: true,
-                                onUpdateProductItem: (product) =>
-                                    updateItemInProductList(product),
-                                onAddProductItem: (product) =>
-                                    addItemToProductList(product),
                               ),
                             ),
                           ),
@@ -248,7 +229,7 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                       id: widget.writeOff != null ? widget.writeOff.id : null,
                       createdAt: _datetime,
                       creator: auth.currentUserDisplayName,
-                      items: productItems,
+                      items: products,
                     )),
                     value: widget.writeOff != null ? 'Обновить' : 'Создать',
                   )

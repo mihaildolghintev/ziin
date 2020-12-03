@@ -36,7 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await auth.createUser(
           email: _email, password: _password, displayName: _displayName);
       Navigator.of(context).pop();
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed('/');
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
       showDialog(
