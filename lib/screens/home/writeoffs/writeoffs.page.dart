@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ziin/logic/writeoffs.dart';
 import 'package:ziin/models/write_off.model.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff.tile.dart';
 import 'package:ziin/ui/z_alert_dialog/z_confirm_dialog.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
 
-class WriteOffsPage extends StatelessWidget {
+final _writeOffProvider = Provider((ref) => WriteOffsProvider());
+
+class WriteOffsPage extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    final writeoffsProvider =
-        Provider.of<WriteOffsProvider>(context, listen: false);
+  Widget build(BuildContext context, ScopedReader watch) {
+    final writeoffsProvider = watch(_writeOffProvider);
     return Container(
       child: Column(
         children: [

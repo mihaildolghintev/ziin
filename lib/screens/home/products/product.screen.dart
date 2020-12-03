@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ziin/common/colors.dart';
 import 'package:ziin/logic/product.dart';
 import 'package:ziin/models/product_item.model.dart';
@@ -25,6 +25,8 @@ class _ProductScreenState extends State<ProductScreen> {
   TextEditingController _cashController;
   TextEditingController _weightController;
   bool _isWeight;
+
+  final _productProvider = Provider((ref) => ProductProvider());
 
   List<String> _barcodes = [];
 
@@ -121,8 +123,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _update(ProductItem productToSend) async {
-    final productProvider =
-        Provider.of<ProductProvider>(context, listen: false);
+    final productProvider = context.read(_productProvider);
 
     try {
       await productProvider.updateProduct(productToSend);
@@ -140,8 +141,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _create(ProductItem productToSend) async {
-    final productProvider =
-        Provider.of<ProductProvider>(context, listen: false);
+    final productProvider = context.read(_productProvider);
 
     try {
       await productProvider.createProduct(productToSend);
@@ -160,107 +160,111 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ZColors.yellow,
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        backgroundColor: ZColors.yellow,
-        elevation: 0.0,
-        title: Center(
-          child: Text(
-            widget?.productItem?.title?.toUpperCase() ?? 'Создание товара',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView(
-          children: [
-            _createFormRow(
-              controller: _titleController,
-              title: 'Имя',
-              hintText: 'Название',
-            ),
-            SizedBox(height: 12.0),
-            _createFormRow(
-              controller: _pluController,
-              keyboardType: TextInputType.phone,
-              title: 'PLU',
-              hintText: 'PLU',
-            ),
-            SizedBox(height: 12.0),
-            _createFormRow(
-              controller: _cashController,
-              keyboardType: TextInputType.phone,
-              title: 'CASH',
-              hintText: 'CASH',
-            ),
-            SizedBox(height: 12.0),
-            CheckboxListTile(
-              checkColor: ZColors.yellow,
-              activeColor: ZColors.black,
-              title: Text(
-                'Весовой?',
+    return Consumer(
+      builder: (context, watch, child) {
+        return Scaffold(
+          backgroundColor: ZColors.yellow,
+          appBar: AppBar(
+            iconTheme: IconThemeData(color: Colors.black),
+            backgroundColor: ZColors.yellow,
+            elevation: 0.0,
+            title: Center(
+              child: Text(
+                widget?.productItem?.title?.toUpperCase() ?? 'Создание товара',
                 style: TextStyle(
-                  fontSize: 20.0,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              value: _isWeight,
-              onChanged: (value) {
-                setState(() {
-                  _isWeight = value;
-                });
-              },
             ),
-            SizedBox(height: 12.0),
-            if (!_isWeight)
-              _createFormRow(
-                controller: _weightController,
-                keyboardType: TextInputType.phone,
-                title: 'Вес',
-                hintText: 'Weight',
-              ),
-            SizedBox(height: 12.0),
-            ..._barcodes
-                .map((barcode) => Dismissible(
-                      key: UniqueKey(),
-                      confirmDismiss: (_) async {
-                        return await showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => ZConfirmDialog(
-                            onOK: () {
-                              _removeBarcode(barcode);
-                              Navigator.of(context).pop();
-                            },
-                            title: 'Подтвердите',
+          ),
+          body: Container(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView(
+              children: [
+                _createFormRow(
+                  controller: _titleController,
+                  title: 'Имя',
+                  hintText: 'Название',
+                ),
+                SizedBox(height: 12.0),
+                _createFormRow(
+                  controller: _pluController,
+                  keyboardType: TextInputType.phone,
+                  title: 'PLU',
+                  hintText: 'PLU',
+                ),
+                SizedBox(height: 12.0),
+                _createFormRow(
+                  controller: _cashController,
+                  keyboardType: TextInputType.phone,
+                  title: 'CASH',
+                  hintText: 'CASH',
+                ),
+                SizedBox(height: 12.0),
+                CheckboxListTile(
+                  checkColor: ZColors.yellow,
+                  activeColor: ZColors.black,
+                  title: Text(
+                    'Весовой?',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                    ),
+                  ),
+                  value: _isWeight,
+                  onChanged: (value) {
+                    setState(() {
+                      _isWeight = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 12.0),
+                if (!_isWeight)
+                  _createFormRow(
+                    controller: _weightController,
+                    keyboardType: TextInputType.phone,
+                    title: 'Вес',
+                    hintText: 'Weight',
+                  ),
+                SizedBox(height: 12.0),
+                ..._barcodes
+                    .map((barcode) => Dismissible(
+                          key: UniqueKey(),
+                          confirmDismiss: (_) async {
+                            return await showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => ZConfirmDialog(
+                                onOK: () {
+                                  _removeBarcode(barcode);
+                                  Navigator.of(context).pop();
+                                },
+                                title: 'Подтвердите',
+                              ),
+                            );
+                          },
+                          child: ProductBarCodeTile(
+                            barcode: barcode,
+                            onTap: () => _onUpdateBarcode(barcode),
                           ),
-                        );
-                      },
-                      child: ProductBarCodeTile(
-                        barcode: barcode,
-                        onTap: () => _onUpdateBarcode(barcode),
-                      ),
-                    ))
-                .toList(),
-            SizedBox(height: 12.0),
-            ZButton(
-              onPressed: _onAddBarcode,
-              value: 'Добавить штрихкод',
+                        ))
+                    .toList(),
+                SizedBox(height: 12.0),
+                ZButton(
+                  onPressed: _onAddBarcode,
+                  value: 'Добавить штрихкод',
+                ),
+                SizedBox(height: 48.0),
+                ZButton(
+                  onPressed: () => _submit(context),
+                  value: widget.productItem != null ? 'Обновить' : 'Создать',
+                  isDark: true,
+                ),
+              ],
             ),
-            SizedBox(height: 48.0),
-            ZButton(
-              onPressed: () => _submit(context),
-              value: widget.productItem != null ? 'Обновить' : 'Создать',
-              isDark: true,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

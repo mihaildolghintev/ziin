@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/all.dart';
 import 'package:ziin/logic/products.dart';
 import 'package:ziin/models/product_item.model.dart';
 import 'package:ziin/models/writeoff_item.model.dart';
@@ -32,12 +32,17 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   TextEditingController _filterController;
 
+  final _productsStream =
+      StreamProvider.autoDispose((ref) => ProductsProvider().productsStream);
+  final _productsProvider = Provider((ref) => ProductsProvider());
+
   @override
   void initState() {
-    final ProductsProvider goodsProvider =
-        Provider.of<ProductsProvider>(context, listen: false);
+    _filterController = TextEditingController(text: '');
     super.initState();
-    _filterController = TextEditingController(text: goodsProvider.filterValue);
+    _filterController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -47,8 +52,6 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   void _scan() async {
-    final productsProvider =
-        Provider.of<ProductsProvider>(context, listen: false);
     final String barcode = await FlutterBarcodeScanner.scanBarcode(
       '#ffffff',
       'Отмена',
@@ -56,17 +59,13 @@ class _ProductsPageState extends State<ProductsPage> {
       ScanMode.BARCODE,
     );
     if (barcode != '-1') {
-      productsProvider.setFilter(barcode);
       _filterController.text = barcode;
       _filterController.selection = TextSelection.fromPosition(
         TextPosition(offset: _filterController.text.length),
       );
     } else {
-      productsProvider.setFilter('');
       _filterController.text = '';
     }
-
-    setState(() {});
   }
 
   void _onTapHandler(ProductItem product) {
@@ -90,60 +89,61 @@ class _ProductsPageState extends State<ProductsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final productsProvider = Provider.of<ProductsProvider>(context);
-
-    return StreamBuilder<List<ProductItem>>(
-        stream: productsProvider.filteredProducts,
-        initialData: [],
-        builder: (context, snapshot) {
-          final products = snapshot.data;
-          return Container(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
+    return Consumer(
+      builder: (context, watch, child) {
+        final productsStream = watch(_productsStream.stream);
+        final productsProvider = watch(_productsProvider);
+        return StreamBuilder<List<ProductItem>>(
+            stream: productsStream,
+            initialData: [],
+            builder: (context, snapshot) {
+              final products = productsProvider.filteredProducts(
+                  snapshot.data, _filterController.text);
+              return Container(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
                   children: [
-                    Flexible(
-                      child: ZTextField(
-                        controller: _filterController,
-                        suffixIcon: Icons.search,
-                        withShadows: true,
-                        onChanged: (value) {
-                          productsProvider.setFilter(value);
-                          setState(() {});
+                    Row(
+                      children: [
+                        Flexible(
+                          child: ZTextField(
+                            controller: _filterController,
+                            suffixIcon: Icons.search,
+                            withShadows: true,
+                          ),
+                        ),
+                        SizedBox(width: 12.0),
+                        ZButton(
+                          onPressed: () =>
+                              Navigator.of(context).pushNamed('/product'),
+                          value: '+',
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 12.0,
+                    ),
+                    ZButton(
+                      onPressed: _scan,
+                      value: 'Сканировать',
+                    ),
+                    SizedBox(height: 12.0),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: products.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ProductTile(
+                            product: products[index],
+                            onTap: () => _onTapHandler(snapshot.data[index]),
+                          );
                         },
                       ),
                     ),
-                    SizedBox(width: 12.0),
-                    ZButton(
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed('/product'),
-                      value: '+',
-                    )
                   ],
                 ),
-                SizedBox(
-                  height: 12.0,
-                ),
-                ZButton(
-                  onPressed: _scan,
-                  value: 'Сканировать',
-                ),
-                SizedBox(height: 12.0),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: products.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return ProductTile(
-                        product: products[index],
-                        onTap: () => _onTapHandler(products[index]),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
+              );
+            });
+      },
+    );
   }
 }

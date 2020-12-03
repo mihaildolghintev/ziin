@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ziin/common/colors.dart';
 import 'package:ziin/common/date_string.dart';
 import 'package:ziin/common/invoice.dart';
@@ -25,6 +25,9 @@ class WriteOffScreen extends StatefulWidget {
 class _WriteOffScreenState extends State<WriteOffScreen> {
   DateTime _datetime = DateTime.now();
   List<WriteOffItem> productItems = [];
+
+  final _writeOffsProvider = Provider((ref) => WriteOffsProvider());
+  final _authProvider = Provider((ref) => Auth());
 
   @override
   void initState() {
@@ -51,8 +54,7 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
   }
 
   void _submit(WriteOff writeOff) async {
-    final writeoffProvider =
-        Provider.of<WriteOffsProvider>(context, listen: false);
+    final writeoffsProvider = context.read(_writeOffsProvider);
     try {
       await showDialog(
         context: context,
@@ -60,9 +62,9 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
         builder: (_) => ZConfirmDialog(
           onOK: () async {
             if (widget.writeOff != null) {
-              await writeoffProvider.updateWriteOff(writeOff);
+              await writeoffsProvider.updateWriteOff(writeOff);
             } else {
-              await writeoffProvider.createWriteOff(writeOff);
+              await writeoffsProvider.createWriteOff(writeOff);
             }
             Navigator.of(context).pop();
           },
@@ -120,13 +122,12 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
   }
 
   void _createPdf(WriteOff writeOff) async {
-    final writeoffProvider =
-        Provider.of<WriteOffsProvider>(context, listen: false);
+    final writeoffsProvider = context.read(_writeOffsProvider);
     try {
       if (widget.writeOff != null) {
-        await writeoffProvider.updateWriteOff(writeOff);
+        await writeoffsProvider.updateWriteOff(writeOff);
       } else {
-        await writeoffProvider.createWriteOff(writeOff);
+        await writeoffsProvider.createWriteOff(writeOff);
       }
       createPdf(writeOff);
     } on FirebaseException catch (e) {
@@ -140,117 +141,121 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<Auth>(context, listen: false);
-    return Scaffold(
-        backgroundColor: ZColors.yellow,
-        appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.black),
-          backgroundColor: ZColors.yellow,
-          elevation: 0.0,
-          title: Center(
-            child: Text(
-              widget.writeOff != null
-                  ? createDateString(widget.writeOff.createdAt)
-                  : 'Новый расход',
-              style: TextStyle(
-                color: Colors.black,
+    return Consumer(
+      builder: (context, watch, child) {
+        final auth = watch(_authProvider);
+        return Scaffold(
+            backgroundColor: ZColors.yellow,
+            appBar: AppBar(
+              iconTheme: IconThemeData(color: Colors.black),
+              backgroundColor: ZColors.yellow,
+              elevation: 0.0,
+              title: Center(
+                child: Text(
+                  widget.writeOff != null
+                      ? createDateString(widget.writeOff.createdAt)
+                      : 'Новый расход',
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
               ),
+              actions: [
+                IconButton(
+                  onPressed: widget.writeOff != null
+                      ? () => _createPdf(widget.writeOff)
+                      : () {},
+                  icon: Icon(Icons.cloud_download_outlined),
+                ),
+              ],
             ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: widget.writeOff != null
-                  ? () => _createPdf(widget.writeOff)
-                  : () {},
-              icon: Icon(Icons.cloud_download_outlined),
-            ),
-          ],
-        ),
-        body: Container(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            body: Container(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: ZButton(
-                      onPressed: () => _selectDate(context),
-                      value: createDateString(_datetime),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 12.0,
-                  ),
-                  ZButton(
-                    onPressed: () =>
-                        Navigator.of(context).pushNamed('/select-product-item',
+                  Row(
+                    children: [
+                      Flexible(
+                        child: ZButton(
+                          onPressed: () => _selectDate(context),
+                          value: createDateString(_datetime),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 12.0,
+                      ),
+                      ZButton(
+                        onPressed: () => Navigator.of(context).pushNamed(
+                            '/select-product-item',
                             arguments: ProductsPageProps(
                               onAddProductItem: addItemToProductList,
                               onUpdateProductItem: updateItemInProductList,
                               onRemoveProductItem: removeItemFromProductList,
                             )),
-                    value: '+',
+                        value: '+',
+                      )
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Колличество продуктов: ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        Text(
+                          productItems.length.toString(),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 22.0),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: productItems.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Dismissible(
+                          key: UniqueKey(),
+                          onDismissed: (_) =>
+                              removeItemFromProductList(productItems[index]),
+                          child: WriteOffListItemTile(
+                            writeoffItem: productItems[index],
+                            onTap: () => Navigator.of(context).pushNamed(
+                              '/edit-quantity-item',
+                              arguments: SelectWriteOffItemQuantityProps(
+                                item: productItems[index],
+                                edit: true,
+                                onUpdateProductItem: (product) =>
+                                    updateItemInProductList(product),
+                                onAddProductItem: (product) =>
+                                    addItemToProductList(product),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  ZButton(
+                    onPressed: () => _submit(WriteOff(
+                      id: widget.writeOff != null ? widget.writeOff.id : null,
+                      createdAt: _datetime,
+                      creator: auth.currentUserDisplayName,
+                      items: productItems,
+                    )),
+                    value: widget.writeOff != null ? 'Обновить' : 'Создать',
                   )
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 16.0, horizontal: 16.0),
-                child: Row(
-                  children: [
-                    Text(
-                      'Колличество продуктов: ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16.0,
-                      ),
-                    ),
-                    Text(
-                      productItems.length.toString(),
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 22.0),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: productItems.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Dismissible(
-                      key: UniqueKey(),
-                      onDismissed: (_) =>
-                          removeItemFromProductList(productItems[index]),
-                      child: WriteOffListItemTile(
-                        writeoffItem: productItems[index],
-                        onTap: () => Navigator.of(context).pushNamed(
-                          '/edit-quantity-item',
-                          arguments: SelectWriteOffItemQuantityProps(
-                            item: productItems[index],
-                            edit: true,
-                            onUpdateProductItem: (product) =>
-                                updateItemInProductList(product),
-                            onAddProductItem: (product) =>
-                                addItemToProductList(product),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              ZButton(
-                onPressed: () => _submit(WriteOff(
-                  id: widget.writeOff != null ? widget.writeOff.id : null,
-                  createdAt: _datetime,
-                  creator: auth.currentUserDisplayName,
-                  items: productItems,
-                )),
-                value: widget.writeOff != null ? 'Обновить' : 'Создать',
-              )
-            ],
-          ),
-        ));
+            ));
+      },
+    );
   }
 }

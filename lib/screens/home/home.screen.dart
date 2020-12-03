@@ -1,6 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ziin/common/colors.dart';
 import 'package:ziin/logic/auth.dart';
 import 'package:ziin/screens/home/products/products.page.dart';
@@ -17,6 +17,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _page = 0;
   GlobalKey _bottomNavigationKey = GlobalKey();
 
+  final _authProvider = Provider((ref) => Auth());
+
   List<Widget> _pages = [
     WriteOffsPage(),
     ProductsPage(
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   void _signOut(BuildContext context) async {
-    final auth = Provider.of<Auth>(context, listen: false);
+    final auth = context.read(_authProvider);
     showDialog(
       context: context,
       builder: (_) => ZConfirmDialog(
@@ -54,13 +56,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ZButton(
-              onPressed: () => _signOut(context),
-              value: '',
-              icon: Icons.logout,
-            ),
+          Consumer(
+            builder: (context, watch, child) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ZButton(
+                  onPressed: () => _signOut(context),
+                  value: '',
+                  icon: Icons.logout,
+                ),
+              );
+            },
           ),
         ],
       ),
