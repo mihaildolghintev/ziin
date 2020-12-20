@@ -5,7 +5,7 @@ class WriteOffsProvider {
   Stream<List<WriteOff>> get writeoffs => FirebaseFirestore.instance
       .collection('writeoffs')
       .snapshots()
-      .map((list) => list.docs
+      .map((list) => list.docs.reversed
           .map((doc) => WriteOff.fromJson({...doc.data(), 'id': doc.id}))
           .toList());
 

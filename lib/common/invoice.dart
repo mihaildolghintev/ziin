@@ -116,7 +116,7 @@ void createPdf(WriteOff writeoff) async {
                                         fontSize: 12.0,
                                       ),
                                     ),
-                                  if (item.product.cash != 0 &&
+                                  if (item.product.cash != "0" &&
                                       !item.product.isWeight)
                                     pw.Text('CASH: ${item.product.cash}',
                                         style: pw.TextStyle(

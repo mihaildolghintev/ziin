@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:ziin/common/colors.dart';
-import 'package:ziin/screens/home/products/add_barcode.screen.dart';
-import 'package:ziin/screens/home/products/product.screen.dart';
-import 'package:ziin/screens/home/products/products.page.dart';
-import 'package:ziin/screens/home/writeoffs/select_writeoff_item.dart';
+import 'package:ziin/screens/home/products/select_product.screen.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff_item_quantity.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff.screen.dart';
 import 'package:ziin/screens/home/writeoffs/writeoffs.page.dart';
@@ -51,21 +48,10 @@ class MyApp extends StatelessWidget {
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/writeoffs': (context) => WriteOffsPage(),
-        '/products': (context) => ProductsPage(
-              props: ProductsPageProps(selectable: false),
-            ),
-        '/product': (context) => ProductScreen(
-              productItem: ModalRoute.of(context).settings.arguments,
-            ),
-        '/add-barcode': (context) => AddBarcodeScreen(
-              props: ModalRoute.of(context).settings.arguments,
-            ),
         '/writeoff': (context) => WriteOffScreen(
               writeOff: ModalRoute.of(context).settings.arguments,
             ),
-        '/select-product-item': (context) => SelectWriteOffItemScreen(
-              props: ModalRoute.of(context).settings.arguments,
-            ),
+        '/select-product': (context) => SelectProductScreen(),
         '/select-quantity-item': (context) => SelectWriteOffItemQuantity(
               props: ModalRoute.of(context).settings.arguments,
             ),

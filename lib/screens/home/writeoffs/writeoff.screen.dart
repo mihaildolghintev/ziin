@@ -8,11 +8,11 @@ import 'package:ziin/logic/auth.dart';
 import 'package:ziin/logic/writeoff_products.dart';
 import 'package:ziin/logic/writeoffs.dart';
 import 'package:ziin/models/write_off.model.dart';
-import 'package:ziin/screens/home/products/products.page.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff_item_quantity.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff_list_item_tile.dart';
 import 'package:ziin/ui/z_alert_dialog/z_alert_dialog.dart';
 import 'package:ziin/ui/z_alert_dialog/z_confirm_dialog.dart';
+import 'package:ziin/ui/z_alert_dialog/z_info_dialog.dart';
 import 'package:ziin/ui/z_button/z_button.dart';
 
 class WriteOffScreen extends StatefulWidget {
@@ -57,25 +57,32 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
 
   void _submit(WriteOff writeOff) async {
     final writeoffsProvider = context.read(_writeOffsProvider);
-    try {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => ZConfirmDialog(
-          onOK: () async {
-            if (widget.writeOff != null) {
-              await writeoffsProvider.updateWriteOff(writeOff);
-            } else {
-              await writeoffsProvider.createWriteOff(writeOff);
-            }
-            Navigator.of(context).pop();
-          },
-          title: 'Подверждение',
-        ),
-      );
-      Navigator.of(context).pop();
-    } catch (e) {
-      rethrow;
+    if (!writeOff.approved) {
+      try {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => ZConfirmDialog(
+            onOK: () async {
+              showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => ZInfoDialog());
+              if (widget.writeOff != null) {
+                await writeoffsProvider.updateWriteOff(writeOff);
+              } else {
+                await writeoffsProvider.createWriteOff(writeOff);
+              }
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            title: 'Подверждение',
+          ),
+        );
+        Navigator.of(context).pop();
+      } catch (e) {
+        rethrow;
+      }
     }
   }
 
@@ -151,6 +158,19 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                 ),
               ],
             ),
+            floatingActionButton: Hero(
+              tag: 'button',
+              child: SizedBox(
+                height: 80,
+                width: 80,
+                child: ZButton(
+                  onPressed: () => Navigator.of(context)
+                      .pushNamed('/select-product', arguments: false),
+                  value: '',
+                  icon: Icons.add,
+                ),
+              ),
+            ),
             body: Container(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -168,18 +188,19 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                         width: 12.0,
                       ),
                       ZButton(
-                        onPressed: () => Navigator.of(context).pushNamed(
-                            '/select-product-item',
-                            arguments: ProductsPageProps(
-                              onAddProductItem:
-                                  productItemsProvider.addItemToProductList,
-                              onUpdateProductItem:
-                                  productItemsProvider.updateItemInProductList,
-                              onRemoveProductItem: productItemsProvider
-                                  .removeItemFromProductList,
-                            )),
-                        value: '+',
-                      )
+                          onPressed: () => _submit(WriteOff(
+                                id: widget.writeOff != null
+                                    ? widget.writeOff.id
+                                    : null,
+                                createdAt: _datetime,
+                                creator: auth.currentUserDisplayName,
+                                items: products,
+                                approved: widget.writeOff != null
+                                    ? widget.writeOff.approved
+                                    : false,
+                              )),
+                          value: '',
+                          icon: Icons.save),
                     ],
                   ),
                   Padding(
@@ -224,15 +245,6 @@ class _WriteOffScreenState extends State<WriteOffScreen> {
                       },
                     ),
                   ),
-                  ZButton(
-                    onPressed: () => _submit(WriteOff(
-                      id: widget.writeOff != null ? widget.writeOff.id : null,
-                      createdAt: _datetime,
-                      creator: auth.currentUserDisplayName,
-                      items: products,
-                    )),
-                    value: widget.writeOff != null ? 'Обновить' : 'Создать',
-                  )
                 ],
               ),
             ));

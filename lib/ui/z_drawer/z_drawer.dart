@@ -25,8 +25,7 @@ class ZDrawer extends StatelessWidget {
               ),
             ),
           ),
-          _createButton(context, to: '/', title: 'Списания'),
-          _createButton(context, to: '/products', title: 'Продукты'),
+          _createButton(context, to: '/writeoffs', title: 'Списания'),
           Expanded(
             child: TextButton(
               onPressed: () => _signOut(context),

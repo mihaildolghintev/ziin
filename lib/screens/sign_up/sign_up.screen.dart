@@ -36,7 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await auth.createUser(
           email: _email, password: _password, displayName: _displayName);
       Navigator.of(context).pop();
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushReplacementNamed('/writeoffs');
     } on FirebaseAuthException catch (e) {
       Navigator.of(context).pop();
       showDialog(
@@ -123,8 +123,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             height: 24.0,
                           ),
                           ZButton(
-                            onPressed: () =>
-                                Navigator.of(context).pushNamed('/signin'),
+                            onPressed: () => Navigator.of(context)
+                                .pushReplacementNamed('/signin'),
                             value: 'Авторизация',
                             isDark: true,
                           ),

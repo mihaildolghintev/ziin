@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ziin/common/colors.dart';
 import 'package:ziin/models/write_off.model.dart';
 
 class WriteOffTile extends StatelessWidget {
@@ -9,6 +10,7 @@ class WriteOffTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: writeOff.approved ? ZColors.greenLight : Colors.white,
       elevation: 0,
       child: ListTile(
         onTap: onTap,
@@ -18,13 +20,19 @@ class WriteOffTile extends StatelessWidget {
           'Создатель: ' + writeOff.creator,
           style: TextStyle(fontWeight: FontWeight.w500),
         ),
-        trailing: Text(
-          writeOff.items.length.toString(),
-          style: TextStyle(
-            fontSize: 30.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        trailing: writeOff.approved
+            ? Icon(
+                Icons.check,
+                color: Colors.black,
+                size: 36.0,
+              )
+            : Text(
+                writeOff.items.length.toString(),
+                style: TextStyle(
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
     );
   }

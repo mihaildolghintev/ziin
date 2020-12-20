@@ -2,23 +2,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ziin/models/product_item.model.dart';
 
 class ProductsProvider {
-  Stream<List<ProductItem>> get productsStream => FirebaseFirestore.instance
-      .collection('products')
-      .snapshots()
-      .map((list) =>
-          list.docs.map((doc) => ProductItem.fromJson(doc.data())).toList())
-      .asBroadcastStream();
+  Future<ProductItem> getProductByBarcode(String barcode) async {
+    final querySnap = await FirebaseFirestore.instance
+        .collection('products')
+        .where('Barcodes', arrayContainsAny: [barcode]).get();
 
-  List<ProductItem> filteredProducts(
-      List<ProductItem> products, String filterValue) {
-    final lcValue = filterValue.toLowerCase();
-    return products
-        .where((ProductItem good) =>
-            good.title.toLowerCase().contains(lcValue) ||
-            good.barcodes
-                .any((barcode) => barcode.toLowerCase().contains(lcValue)) ||
-            good.plu.toString().toLowerCase().contains(lcValue) ||
-            good.cash.toString().toLowerCase().contains(lcValue))
-        .toList();
+    return ProductItem.fromJson(querySnap.docs.first.data());
+  }
+
+  Future<ProductItem> getProductByPlu(String plu) async {
+    final querySnap = await FirebaseFirestore.instance
+        .collection('products')
+        .where('Plu', isEqualTo: plu)
+        .get();
+
+    return ProductItem.fromJson(querySnap.docs.first.data());
+  }
+
+  Future<ProductItem> getProductByCash(String cash) async {
+    final querySnap = await FirebaseFirestore.instance
+        .collection('products')
+        .where('Cash', isEqualTo: cash)
+        .get();
+
+    return ProductItem.fromJson(querySnap.docs.first.data());
   }
 }

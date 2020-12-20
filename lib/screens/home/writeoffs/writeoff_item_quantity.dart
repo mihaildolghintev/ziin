@@ -51,7 +51,11 @@ class _SelectWriteOffItemQuantityState
     if (num == null || num < 1) {
       _quanitityController.text = (1).toString();
     } else {
-      _quanitityController.text = (num + 1).toString();
+      if (widget.props.item.product.isWeight) {
+        _quanitityController.text = (num + 1).toString();
+      } else {
+        _quanitityController.text = (num + 1).toStringAsFixed(0);
+      }
     }
   }
 
@@ -60,7 +64,11 @@ class _SelectWriteOffItemQuantityState
     if (num == null || num <= 0) {
       _quanitityController.text = (0).toString();
     } else {
-      _quanitityController.text = (num - 1).toString();
+      if (widget.props.item.product.isWeight) {
+        _quanitityController.text = (num - 1).toString();
+      } else {
+        _quanitityController.text = (num - 1).toStringAsFixed(0);
+      }
     }
   }
 
@@ -83,7 +91,12 @@ class _SelectWriteOffItemQuantityState
         ),
       );
     }
-    Navigator.of(context).pop();
+    if (widget.props.edit) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+    }
   }
 
   bool get isWeight => widget.props.item.product.isWeight;
@@ -94,7 +107,6 @@ class _SelectWriteOffItemQuantityState
     return Consumer(
       builder: (context, watch, child) {
         return Scaffold(
-          backgroundColor: Colors.white,
           appBar: AppBar(
             elevation: 0.0,
             iconTheme: IconThemeData(color: Colors.black),
@@ -110,7 +122,7 @@ class _SelectWriteOffItemQuantityState
                 Text(
                   product.title,
                   style: TextStyle(
-                    fontSize: 40.0,
+                    fontSize: 32.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ziin/common/colors.dart';
 import 'package:ziin/logic/writeoffs.dart';
 import 'package:ziin/models/write_off.model.dart';
 import 'package:ziin/screens/home/writeoffs/writeoff.tile.dart';
 import 'package:ziin/ui/z_alert_dialog/z_confirm_dialog.dart';
+import 'package:ziin/ui/z_button/z_button.dart';
 import 'package:ziin/ui/z_drawer/z_drawer.dart';
 
 final _writeOffProvider = Provider((ref) => WriteOffsProvider());
@@ -24,22 +24,15 @@ class WriteOffsPage extends ConsumerWidget {
           style: TextStyle(color: Colors.black),
         ),
       ),
-      floatingActionButton: SizedBox(
-        height: 80,
-        width: 80,
-        child: FloatingActionButton(
-          backgroundColor: ZColors.redLight,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: BorderSide(
-              width: 2.0,
-              color: Colors.black,
-            ),
-          ),
-          onPressed: () => Navigator.of(context).pushNamed('/writeoff'),
-          child: Icon(
-            Icons.add,
-            color: Colors.black,
+      floatingActionButton: Hero(
+        tag: 'button',
+        child: SizedBox(
+          height: 80,
+          width: 80,
+          child: ZButton(
+            onPressed: () => Navigator.of(context).pushNamed('/writeoff'),
+            icon: Icons.add,
+            value: '',
           ),
         ),
       ),
@@ -51,6 +44,7 @@ class WriteOffsPage extends ConsumerWidget {
                   stream: writeoffsProvider.writeoffs,
                   initialData: [],
                   builder: (context, snapshot) {
+                    print(snapshot);
                     return ListView.builder(
                       physics: BouncingScrollPhysics(),
                       itemCount: snapshot.data.length,
